@@ -16,6 +16,7 @@ const fs = require('fs');
 const sharp = require('sharp');
 const OpenAI = require('openai');
 const { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } = require('@google/generative-ai');
+const keytar = require('keytar');
 require('dotenv').config();
 
 // --- Global Variables ---
@@ -210,7 +211,7 @@ function initializeApp() {
                 { label: 'Capture Screen Area', click: () => toggleCaptureWindow() },
                 { label: 'Settings...', click: createSettingsWindow }, // Added Settings
                 { type: 'separator' },
-                { label: 'Quit Screen Describer', click: () => app.quit() }
+                { label: 'Quit Screen Prompt', click: () => app.quit() }
             ]);
             tray.setToolTip('Screen Describer');
             tray.setContextMenu(contextMenu);
@@ -285,7 +286,22 @@ function createResultWindow(initialPromptContent, selectedModelForDropdown) {
         resultWindow.webContents.send('prompt:display-optimized-content', { prompt: initialPromptContent, selectedModel: selectedModelForDropdown });
         resultWindow.show();
     });
-    resultWindow.on('closed', () => { resultWindow = null; });
+
+    // Intercept the 'close' event
+    resultWindow.on('close', (event) => {
+        // Instead of letting the window close, we prevent the default action...
+        event.preventDefault();
+        // ...and just hide the window instead.
+        resultWindow.hide();
+        console.log('Result window hidden instead of closed.');
+    });
+
+    // The 'closed' event will now only fire when the whole app is quitting
+    // and the window is force-closed, so we still nullify the variable.
+    resultWindow.on('closed', () => {
+        console.log('Result window has been fully closed.');
+        resultWindow = null;
+    });
 }
 
 function displayErrorInNewResultWindow(errorMessage) {
@@ -337,7 +353,19 @@ async function generateAndDisplayOptimizedPrompt(targetImageGenModel, imageBase6
 
     try {
         if (targetImageGenModel === 'midjourney') {
-            metaPrompt = `You are an expert Midjourney prompt engineer... (Your full, most recent Midjourney meta-prompt that infers AR and omits version, and asks for emotion/color/camera if applicable) ... The output must be ONLY the Midjourney prompt itself...`;
+            metaPrompt = `You are an expert Midjourney prompt engineer.
+Carefully analyze the provided image. Based on its visual content, composition, subject matter, and any discernible artistic style, create an optimized and highly effective Midjourney prompt.
+Your generated Midjourney prompt should:
+1.  Faithfully represent the key elements, objects, and overall scene depicted in the image. Do not invent significant details or subjects that are not present or strongly implied in the image.
+2.  Be highly descriptive of what is visually present. Specifically try to infer and include details about:
+    a.  **Emotions and Mood:** If the image clearly portrays specific emotions in subjects (e.g., joyful, pensive, surprised) or an overall distinct mood (e.g., serene, mysterious, energetic, melancholic), incorporate these observations.
+    b.  **Colour Grading and Lighting:** Describe the prominent color palette, any apparent color grading style (e.g., "warm vintage tones," "cool cinematic blues," "vibrant neon palette," "desaturated and moody," "monochromatic with high contrast"), and key lighting characteristics (e.g., "soft diffused daylight," "dramatic chiaroscuro," "golden hour glow," "artificial studio lighting").
+    c.  **Apparent Camera Type/Shot Style:** If the image's quality, perspective, depth of field, or artifacts suggest a particular camera type or shot style (e.g., "shot on a vintage film camera," "crisp DSLR quality," "smartphone photo aesthetic," "wide-angle architectural shot," "intimate macro detail," "dynamic action shot," "security camera footage style," "drone's eye view"), include such a description. If a specific camera isn't obvious, you can suggest a general photographic quality (e.g., "professional photograph quality") if appropriate, or omit this if the image is clearly illustrative or abstract.
+3.  Incorporate common Midjourney keywords for overall visual quality or specific desired aesthetics ONLY IF they genuinely enhance the accurate representation of the image's actual content and the inferred details from point 2. Prioritize faithfulness to the image over imposing excessive stylization if the image itself is simple or mundane.
+4.  Include relevant Midjourney parameters. If the image's shape or content strongly suggests a specific aspect ratio (e.g., wide, square, portrait), try to include an appropriate --ar parameter (like --ar 16:9, --ar 1:1, --ar 2:3, etc.). If no specific aspect ratio is clearly evident from the image, do not add an --ar parameter. Do not add a version parameter.
+5.  **Style Description:** Clearly specify the style of the image, such as "anime," "realistic," "illustration," "cartoon," etc., to ensure the prompt accurately reflects the desired output style.
+The output must be ONLY the Midjourney prompt itself, with no conversational text, preambles, or explanations.`;
+
         } else if (targetImageGenModel === 'stablediffusion') {
             metaPrompt = `You are an expert Midjourney prompt engineer.
 Carefully analyze the provided image. Based on its visual content, composition, subject matter, and any discernible artistic style, create an optimized and highly effective Midjourney prompt.
@@ -349,6 +377,7 @@ Your generated Midjourney prompt should:
     c.  **Apparent Camera Type/Shot Style:** If the image's quality, perspective, depth of field, or artifacts suggest a particular camera type or shot style (e.g., "shot on a vintage film camera," "crisp DSLR quality," "smartphone photo aesthetic," "wide-angle architectural shot," "intimate macro detail," "dynamic action shot," "security camera footage style," "drone's eye view"), include such a description. If a specific camera isn't obvious, you can suggest a general photographic quality (e.g., "professional photograph quality") if appropriate, or omit this if the image is clearly illustrative or abstract.
 3.  Incorporate common Midjourney keywords for overall visual quality or specific desired aesthetics ONLY IF they genuinely enhance the accurate representation of the image's actual content and the inferred details from point 2. Prioritize faithfulness to the image over imposing excessive stylization if the image itself is simple or mundane.
 4.  Include relevant Midjourney parameters. If the image's shape or content strongly suggests a specific aspect ratio (e.g., wide, square, portrait), try to include an appropriate --ar parameter (like --ar 16:9, --ar 1:1, --ar 2:3, etc.). If no specific aspect ratio is clearly evident from the image, do not add an --ar parameter. Do not add a version parameter.
+5.  **Style Description:** Clearly specify the style of the image, such as "anime," "realistic," "illustration," "cartoon," etc., to ensure the prompt accurately reflects the desired output style.
 The output must be ONLY the Midjourney prompt itself, with no conversational text, preambles, or explanations.`;
 
         } else if (targetImageGenModel === 'naturallanguage') {
@@ -603,5 +632,54 @@ ipcMain.on('result:copy-to-clipboard', (event, text) => {
 });
 
 ipcMain.on('result:close', () => {
-    if (resultWindow && !resultWindow.isDestroyed()) resultWindow.close();
+    if (resultWindow && !resultWindow.isDestroyed()) {
+        resultWindow.hide();
+    }
 });
+
+// Function to store an API key
+async function storeApiKey(service, account, key) {
+  await keytar.setPassword(service, account, key);
+}
+
+// Function to retrieve an API key
+async function getApiKey(service, account) {
+  return await keytar.getPassword(service, account);
+}
+
+// Example usage
+storeApiKey('ScreenPrompt', 'openai', 'your_openai_api_key_here');
+getApiKey('ScreenPrompt', 'openai').then(key => console.log(key));
+
+// Handle application quit
+app.on('before-quit', (event) => {
+    // Close all windows
+    if (settingsWindow && !settingsWindow.isDestroyed()) {
+        settingsWindow.destroy();
+    }
+    if (captureWindow && !captureWindow.isDestroyed()) {
+        captureWindow.destroy();
+    }
+    if (resultWindow && !resultWindow.isDestroyed()) {
+        resultWindow.destroy();
+    }
+    
+    // Unregister all shortcuts
+    globalShortcut.unregisterAll();
+});
+
+// Handle tray quit
+function quitApp() {
+    app.quit();
+}
+
+// Update the tray menu creation to use the quitApp function
+function createTrayMenu() {
+    const contextMenu = Menu.buildFromTemplate([
+        { label: 'Capture Screen Area', click: () => toggleCaptureWindow() },
+        { label: 'Settings...', click: createSettingsWindow },
+        { type: 'separator' },
+        { label: 'Quit Screen Prompt', click: quitApp }
+    ]);
+    tray.setContextMenu(contextMenu);
+}

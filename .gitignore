@@ -51,3 +51,6 @@ pids/
 
 # Yarn Integrity file
 .yarn-integrity
+
+# Asset files
+.psd

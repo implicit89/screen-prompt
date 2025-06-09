@@ -1,6 +1,6 @@
-# Screen-to-LLM Describer MVP
+# Screen Prompt
 
-A Minimum Viable Product (MVP) of a desktop application for macOS and Windows that allows users to select an area of their screen and receive an AI-generated description of its contents.
+A desktop application for macOS and Windows that allows users to select an area of their screen and receive an AI-generated description of its contents.
 
 ## Core Technologies
 
@@ -15,13 +15,11 @@ A Minimum Viable Product (MVP) of a desktop application for macOS and Windows th
     * Node.js (which includes npm). Download from [nodejs.org](https://nodejs.org/).
     * An API Key from your chosen AI Service Provider that supports vision capabilities.
 
-2.  **Clone the Repository (or Create Files):**
-    If you cloned a Git repository:
+2.  **Clone the Repository:**
     ```bash
-    git clone <repository-url>
-    cd screen-to-llm-describer
+    git clone https://github.com/implicit89/screen-prompt.git
+    cd screen-prompt
     ```
-    If you created the files manually, navigate to the project's root directory.
 
 3.  **Install Dependencies:**
     Open your terminal or command prompt in the project root and run:
@@ -33,7 +31,7 @@ A Minimum Viable Product (MVP) of a desktop application for macOS and Windows th
     `npm run rebuild-sharp`.
 
 4.  **Configure AI Service Provider & API Keys:**
-    This application requires API credentials to communicate with an AI service for image description. Configuration is done via an `.env` file in the project root.
+    This application requires API credentials to communicate with an AI service for image description. Configuration is done via an `.env` file in the project root or through the settings page.
 
     * **Create the `.env` file:**
         Copy the `.env_example` file to a new file named `.env`:
@@ -72,6 +70,8 @@ A Minimum Viable Product (MVP) of a desktop application for macOS and Windows th
         ```
 
     * **Security Note:** This method of storing API keys is suitable for local development and this MVP. For a production application, consider more secure key management solutions. The `.env` file should be included in your `.gitignore` file to prevent accidental commits of sensitive keys.
+
+    * **Settings Page:** You can also configure your API settings directly from the application's settings page.
 
 ## Running the Application
 
@@ -122,7 +122,5 @@ A Minimum Viable Product (MVP) of a desktop application for macOS and Windows th
 * Advanced selection methods (circular, freehand drawing).
 * Integration with additional local or cloud-based AI/LLM services beyond the initially configured ones.
 * Detailed progress indicators or loading animations.
-* Application settings or configuration user interface (beyond `.env` file).
 * Support for multi-monitor screen selection beyond the primary display.
 * Advanced, production-grade API key management solutions.
-* System tray icon for managing the background application.
