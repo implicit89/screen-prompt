@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'">
+    <title>AI-Generated Prompt</title>
+    <style>
+        /* New, more compact style for the result window */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 12px; /* Reduced base font size from 13px */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+    
+        .prompt-section {
+            padding: 10px; /* Reduced padding around the main content */
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            overflow-y: hidden; /* Prevent this container from scrolling */
+        }
+    
+        .prompt-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px; /* Reduced space below dropdown */
+            flex-shrink: 0; /* Prevent controls from shrinking */
+        }
+    
+        .prompt-controls label {
+            font-weight: bold;
+        }
+    
+        #image-gen-model-select {
+            padding: 5px 6px; /* Reduced padding */
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 1em; /* Inherit 12px from body */
+        }
+    
+        /* This is now the main text area */
+        #optimized-prompt-area {
+            flex-grow: 1;
+            padding: 8px; /* Reduced padding */
+            border: 1px solid #ccc;
+            background-color: #fff;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            border-radius: 4px;
+            font-size: 1.05em; /* Make prompt text slightly larger than base for readability */
+            line-height: 1.5;
+            min-height: 100px;
+        }
+    
+        .status-message {
+            text-align: center;
+            font-size: 0.9em; /* ~10.8px */
+            color: #555;
+            height: 18px; /* Consistent height */
+            padding-top: 2px;
+            flex-shrink: 0;
+        }
+        
+        .controls { /* Button controls area */
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            padding: 8px 10px; /* Reduced padding */
+            border-top: 1px solid #ddd;
+            background-color: #efefef;
+            flex-shrink: 0;
+        }
+        
+        button {
+            padding: 6px 12px; /* Reduced padding */
+            font-size: 1em; /* Inherit 12px from body */
+            border: 1px solid transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+    
+        #copy-button { background-color: #007bff; color: white; border-color: #007bff; }
+        #copy-button:hover { background-color: #0056b3; border-color: #0056b3; }
+        #edit-button { background-color: #6c757d; color: white; border-color: #6c757d; }
+        #edit-button:hover { background-color: #545b62; border-color: #545b62; }
+    </style>
+</head>
+<body>
+    <div class="prompt-section">
+        <div class="prompt-controls">
+            <label for="image-gen-model-select">Optimize Prompt for:</label>
+            <select id="image-gen-model-select">
+                <optgroup label="For Image Generation">
+                    <option value="midjourney">Midjourney</option>
+                    <option value="stablediffusion">Stable Diffusion</option>
+                    <option value="naturallanguage">Natural Language</option>
+                </optgroup>
+                <optgroup label="For Analysis">
+                    <option value="cinematographer">Cinematographer Analysis</option>
+                </optgroup>
+            </select>
+        </div>
+        <div id="optimized-prompt-area" contenteditable="true" title="Editable optimized prompt">
+            Loading prompt...
+        </div>
+        <div id="prompt-status-message" class="status-message"></div>
+    </div>
+
+    <div class="controls">
+        <button id="edit-button" title="Suggest Edits (Future Feature)">Suggest Edits</button>
+        <button id="copy-button" title="Copy Displayed Prompt to Clipboard">Copy Prompt</button>
+    </div>
+    <div id="status-message-area" class="status-message"></div>
+    <script src="./result.js"></script>
+</body>
+</html>

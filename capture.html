@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'">
+    <title>Screen Capture Overlay</title>
+    <style>
+        body, html {
+            width: 100vw; /* Use viewport units for full screen */
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            /* Slightly visible background helps ensure mouse events are captured across platforms */
+            background-color: rgba(0, 100, 255, 0.01);
+            cursor: crosshair;
+            user-select: none; /* Prevent text selection of the overlay itself */
+        }
+        #selection-box {
+            position: absolute;
+            border: 2px dashed #007bff; /* Blue dashed border */
+            background-color: rgba(0, 123, 255, 0.2); /* Semi-transparent blue fill */
+            box-sizing: border-box;
+            pointer-events: none; /* Don't let the box itself interfere with mouse events on body */
+        }
+    </style>
+</head>
+<body>
+    <div id="selection-box" style="display: none;"></div>
+    <script src="./capture.js"></script>
+</body>
+</html>

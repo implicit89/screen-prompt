@@ -1,0 +1,31 @@
+{
+  "name": "screen-to-llm-describer",
+  "version": "0.1.0",
+  "description": "MVP to select a screen area and get an AI description.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "rebuild-sharp": "npm rebuild --runtime=electron --target=$(electron --version | sed 's/v//') --disturl=https://electronjs.org/headers --build-from-source sharp",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "electron",
+    "openai",
+    "gemini",
+    "screen-capture",
+    "llm",
+    "sharp"
+  ],
+  "author": "Greg Honmong",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^29.0.0"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.11.3",
+    "dotenv": "^16.4.5",
+    "electron-store": "^10.0.1",
+    "openai": "^4.33.0",
+    "sharp": "^0.33.3"
+  }
+}

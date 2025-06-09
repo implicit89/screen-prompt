@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'">
+    <title>Settings</title>
+    <style>
+        /* The CSS from the previous step remains the same. It's included here for completeness. */
+        :root {
+            --primary-color: #007bff;
+            --border-color: #dee2e6;
+            --background-color: #f8f9fa;
+            --text-color: #212529;
+            --text-muted: #6c757d;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 13px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .window-container { display: flex; flex-direction: column; height: 100vh; }
+        .tab-container {
+            display: flex; border-bottom: 1px solid var(--border-color);
+            background-color: #fff; padding: 0 10px; flex-shrink: 0;
+        }
+        .tab-link {
+            background-color: inherit; border: none; outline: none; cursor: pointer;
+            padding: 10px 15px; transition: color 0.2s, border-bottom 0.2s;
+            border-bottom: 2px solid transparent; font-size: 1em; color: var(--text-muted);
+        }
+        .tab-link:hover { color: #000; }
+        .tab-link.active { color: var(--primary-color); border-bottom: 2px solid var(--primary-color); }
+        .content-container { padding: 15px; flex-grow: 1; overflow-y: auto; }
+        .tab-content { display: none; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 0.95em; }
+        .radio-group { display: flex; align-items: center; margin-bottom: 5px; }
+        .radio-group input[type="radio"] { margin-right: 8px; }
+        .radio-group label { font-weight: normal; }
+        .form-group input[type="text"], .form-group input[type="password"] {
+            width: calc(100% - 18px); padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em;
+        }
+        #capture-hotkey { background-color: #e9ecef; text-align: center; }
+        p.description { font-size: 0.9em; color: var(--text-muted); margin-top: 5px; margin-bottom: 15px; }
+        .footer {
+            padding: 10px 15px; border-top: 1px solid var(--border-color);
+            background-color: #fff; text-align: right; flex-shrink: 0;
+        }
+        button {
+            padding: 8px 15px; font-size: 1em; color: white; background-color: var(--primary-color);
+            border: none; border-radius: 4px; cursor: pointer; transition: background-color 0.2s;
+        }
+        button:hover { background-color: #0056b3; }
+        .status-message {
+            font-size: 0.9em; color: green; display: inline-block; margin-right: 15px;
+        }
+        .error-message { color: red; }
+    </style>
+</head>
+<body>
+    <div class="window-container">
+        <div class="tab-container">
+            <button class="tab-link" data-tab="Model">Model</button>
+            <button class="tab-link" data-tab="Hotkey">Hotkey</button>
+        </div>
+
+        <div class="content-container">
+            <div id="Model" class="tab-content">
+                <div class="form-group">
+                    <label>Active AI Service Provider:</label>
+                    <div class="radio-group">
+                        <input type="radio" id="provider-openai" name="api-provider" value="openai">
+                        <label for="provider-openai">OpenAI (e.g., GPT-4o)</label>
+                    </div>
+                    <div class="radio-group">
+                        <input type="radio" id="provider-gemini" name="api-provider" value="gemini">
+                        <label for="provider-gemini">Google (e.g., Gemini 1.5)</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="openai-api-key">OpenAI API Key:</label>
+                    <input type="password" id="openai-api-key" placeholder="sk-...">
+                </div>
+                <div class="form-group">
+                    <label for="google-api-key">Google (Gemini) API Key:</label>
+                    <input type="password" id="google-api-key" placeholder="AIzaSy...">
+                </div>
+            </div>
+
+            <div id="Hotkey" class="tab-content">
+                <div class="form-group">
+                    <label for="capture-hotkey">Screen Capture Hotkey:</label>
+                    <p class="description">Click in the box below and press your desired key combination.</p>
+                    <input type="text" id="capture-hotkey" placeholder="Click here and press keys..." readonly>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <span id="status-message" class="status-message"></span>
+            <button id="save-settings">Save Settings</button>
+        </div>
+    </div>
+    <script src="./settings.js"></script>
+</body>
+</html>
