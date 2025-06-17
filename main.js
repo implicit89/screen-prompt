@@ -376,115 +376,94 @@ async function generateAndDisplayOptimizedPrompt(targetImageGenModel, imageBase6
     let optimizedPrompt = `Failed to generate prompt for ${targetImageGenModel}.`; // Default error prompt
     let metaPrompt = "";
     let anErrorOccurred = false;
-
     try {
+        const systemPrompt = `You are a world-class visual analyst, a hybrid of a seasoned cinematographer, a master art historian, and a keen-eyed photographer. When given an image, your primary goal is to perform a deep, multi-faceted analysis and deconstruct the image into its core components with the thoughtful and detailed eye of a true artist.
+
+First, analyze the provided image step-by-step. Internally, build a rich understanding of the following aspects (you will use this understanding to fulfill the final formatting instruction):
+
+1.  **Subject & Narrative:**
+    * What is the primary subject? What are they doing?
+    * What is the story or narrative being told? What just happened, or what is about to happen?
+    * Identify any key objects or secondary subjects.
+
+2.  **Composition & Framing:**
+    * How is the shot framed? (e.g., rule of thirds, leading lines, centered, symmetrical).
+    * What is the camera angle and perspective? (e.g., eye-level, low-angle, high-angle, bird's-eye view, dutch angle).
+    * What is the shot type? (e.g., extreme close-up, medium shot, full shot, wide landscape).
+
+3.  **Lighting & Color:**
+    * **Lighting Scheme:** Describe the lighting setup. Is it high-key (bright, few shadows), low-key (dark, high contrast), or natural? Identify the key light, fill light, and backlight if discernible. Note the quality of light (e.g., hard, direct shadows vs. soft, diffused light).
+    * **Color Palette & Grading:** Identify the dominant and accent colors. Describe the overall color grading style (e.g., cinematic teal and orange, vintage sepia, vibrant Technicolor, desaturated and moody, high-contrast monochrome).
+
+4.  **Camera & Lens Characteristics:**
+    * **Lens & Sensor:** Infer the likely lens characteristics (e.g., "shallow depth of field suggesting a fast prime lens like an 85mm f/1.4 on a full-frame sensor," "deep focus of a wide-angle lens," "compression from a telephoto lens," "distortion from a fisheye lens").
+    * **Medium:** Does it look like digital, or does it have artifacts suggesting a specific film stock (e.g., "the grain and color palette of Kodak Portra 400," "the look of vintage 16mm film")?
+
+5.  **Mood & Emotion:**
+    * What is the primary mood or atmosphere? (e.g., serene, tense, joyful, melancholic, futuristic, nostalgic).
+    * If people are present, what are their apparent emotions?
+
+6.  **Artistic Style & Era:**
+    * What is the overall artistic style? (e.g., photorealistic, impressionistic painting, cyberpunk concept art, minimalist graphic design).
+    * What decade or historical era does the style evoke?
+
+After completing this internal analysis, you will follow the final instruction to format your knowledge into a specific output.`;
+
+        let metaPromptAddon = ""; // This will hold the formatting instruction
+
         if (targetImageGenModel === 'midjourney') {
-            metaPrompt = `You are an expert Midjourney prompt engineer.
-Carefully analyze the provided image. Based on its visual content, composition, subject matter, and any discernible artistic style, create an optimized and highly effective Midjourney prompt.
-Your generated Midjourney prompt should:
-1.  Faithfully represent the key elements, objects, and overall scene depicted in the image. Do not invent significant details or subjects that are not present or strongly implied in the image.
-2.  Be highly descriptive of what is visually present. Specifically try to infer and include details about:
-    a.  **Emotions and Mood:** If the image clearly portrays specific emotions in subjects (e.g., joyful, pensive, surprised) or an overall distinct mood (e.g., serene, mysterious, energetic, melancholic), incorporate these observations.
-    b.  **Colour Grading and Lighting:** Describe the prominent color palette, any apparent color grading style (e.g., "warm vintage tones," "cool cinematic blues," "vibrant neon palette," "desaturated and moody," "monochromatic with high contrast"), and key lighting characteristics (e.g., "soft diffused daylight," "dramatic chiaroscuro," "golden hour glow," "artificial studio lighting").
-    c.  **Apparent Camera Type/Shot Style:** If the image's quality, perspective, depth of field, or artifacts suggest a particular camera type or shot style (e.g., "shot on a vintage film camera," "crisp DSLR quality," "smartphone photo aesthetic," "wide-angle architectural shot," "intimate macro detail," "dynamic action shot," "security camera footage style," "drone's eye view"), include such a description. If a specific camera isn't obvious, you can suggest a general photographic quality (e.g., "professional photograph quality") if appropriate, or omit this if the image is clearly illustrative or abstract.
-3.  Incorporate common Midjourney keywords for overall visual quality or specific desired aesthetics ONLY IF they genuinely enhance the accurate representation of the image's actual content and the inferred details from point 2. Prioritize faithfulness to the image over imposing excessive stylization if the image itself is simple or mundane.
-4.  Include relevant Midjourney parameters. If the image's shape or content strongly suggests a specific aspect ratio (e.g., wide, square, portrait), try to include an appropriate --ar parameter (like --ar 16:9, --ar 1:1, --ar 2:3, etc.). If no specific aspect ratio is clearly evident from the image, do not add an --ar parameter. Do not add a version parameter.
-5.  **Style Description:** Clearly specify the style of the image, such as "anime," "realistic," "illustration," "cartoon," etc., to ensure the prompt accurately reflects the desired output style.
-6.  **Unusual or Surreal Elements:** If the image contains any elements that appear unusual, out of place, surreal, or fantastical, explicitly note these observations in the prompt.
-The output must be ONLY the Midjourney prompt itself, with no conversational text, preambles, or explanations.`;
-
+            metaPromptAddon = `FINAL INSTRUCTION: Now, using your detailed analysis, compose a Midjourney prompt. Combine the most evocative descriptive phrases and keywords into a coherent string. Prioritize visual description and mood. If a clear aspect ratio was inferred, append it (e.g., --ar 16:9). The output must ONLY be the final prompt string.`;
         } else if (targetImageGenModel === 'stablediffusion') {
-            metaPrompt = `You are an expert Stable Diffusion prompt engineer.
-Carefully analyze the provided image. Based on its visual content, composition, subject matter, and any discernible artistic style, create an optimized and highly effective Stable Diffusion prompt.
-Your generated Stable Diffusion prompt should:
-1.  **Object Detailing:** Clearly identify and describe the primary objects and subjects within the image. Include details about their appearance, texture, and any notable features.
-2.  Faithfully represent the key elements and overall scene depicted in the image. Do not invent significant details or subjects that are not present or strongly implied in the image.
-3.  Be highly descriptive of what is visually present. Specifically try to infer and include details about:
-    a.  **Emotions and Mood:** If the image clearly portrays specific emotions in subjects (e.g., joyful, pensive, surprised) or an overall distinct mood (e.g., serene, mysterious, energetic, melancholic), incorporate these observations.
-    b.  **Colour Grading and Lighting:** Describe the prominent color palette, any apparent color grading style (e.g., "warm vintage tones," "cool cinematic blues," "vibrant neon palette," "desaturated and moody," "monochromatic with high contrast"), and key lighting characteristics (e.g., "soft diffused daylight," "dramatic chiaroscuro," "golden hour glow," "artificial studio lighting").
-    c.  **Apparent Camera Type/Shot Style:** If the image's quality, perspective, depth of field, or artifacts suggest a particular camera type or shot style (e.g., "shot on a vintage film camera," "crisp DSLR quality," "smartphone photo aesthetic," "wide-angle architectural shot," "intimate macro detail," "dynamic action shot," "security camera footage style," "drone's eye view"), include such a description. If a specific camera isn't obvious, you can suggest a general photographic quality (e.g., "professional photograph quality") if appropriate, or omit this if the image is clearly illustrative or abstract.
-4.  Incorporate keywords and phrases commonly effective for Stable Diffusion for overall visual quality or specific desired aesthetics ONLY IF they genuinely enhance the accurate representation of the image's actual content and the inferred details from previous points. Prioritize faithfulness to the image.
-5.  **Style Description:** Clearly specify the style of the image, such as "anime," "photorealistic," "illustration," "cartoon," "oil painting," etc., to ensure the prompt accurately reflects the desired output style.
-6.  **Unusual or Surreal Elements:** If the image features anything unexpected, surreal, or out of the ordinary, make sure to include a description of these elements.
-7.  If the image's aspect ratio is clearly non-square (e.g., wide panoramic, tall portrait), you can suggest this descriptively (e.g., "wide aspect ratio", "portrait aspect ratio") but avoid specific numerical ratios unless explicitly requested for Stable Diffusion.
-The output must be ONLY the Stable Diffusion prompt itself, as a string of keywords and descriptive phrases, with no conversational text, preambles, or explanations.`;
-
+            metaPromptAddon = `FINAL INSTRUCTION: Now, using your detailed analysis, compose a Stable Diffusion prompt. Emphasize keywords and structure it as a comma-separated list of tags and descriptive phrases. Start with quality tags like "masterpiece, best quality, absurdres". Use parentheses for emphasis on the primary subject or key styles, for example: (keyword:1.2). The output must ONLY be the positive prompt text.`;
         } else if (targetImageGenModel === 'naturallanguage') {
-            metaPrompt = `You are an expert prompt engineer for advanced image generation models that excel at understanding natural language (such as DALL-E, Google's Imagen, or similar).
-Carefully analyze the provided image. Create a clear, descriptive, and coherent prompt based on its visual content, suitable for achieving a high-fidelity image with such models.
-Your generated prompt should:
-1.  ACCURATELY and FAITHFULLY describe the main subjects, objects, the overall scene, and any actions taking place in the image. Do not invent elements not present.
-2.  Use natural, descriptive language, forming well-constructed sentences or evocative phrases. Clearly articulate details such as:
-    a.  **Emotions and Mood:** If the image conveys clear emotions (e.g., "a portrait filled with quiet joy," "a landscape exuding serene tranquility") or a distinct atmosphere, express this.
-    b.  **Colour & Lighting:** Describe the key colors, the interplay of light and shadow, and any specific lighting conditions or color grading style (e.g., "bathed in the soft, warm light of early morning," "dramatic, high-contrast lighting typical of film noir," "a palette of vibrant, tropical colors").
-    c.  **Camera Perspective & Style:** Describe the apparent viewpoint, shot type, or photographic style (e.g., "an intimate eye-level shot focusing on the subject's gaze," "a sweeping bird's-eye view of the city," "captured in a candid, documentary photography style," "macro photography revealing the intricate patterns of a flower"). If uncertain, aim for a "clear, high-quality photograph" style unless the image implies an illustrative or artistic medium.
-    d.  **Artistic Style:** If the image exhibits a recognizable artistic style (e.g., "rendered in the style of impressionist oil painting," "a clean, minimalist vector illustration," "looks like a hyperrealistic 3D model," "vintage sci-fi book cover art"), identify and include it. If no strong artistic style is present, focus on achieving a clear, realistic depiction.
-3.  Focus on a well-composed and comprehensive description rather than excessive keyword stuffing. The prompt should be easy for an advanced AI to understand and follow.
-4.  If the image's dimensions clearly suggest a particular aspect ratio (e.g., "a panoramic vista," "a tall, slender portrait format"), you may note this descriptively.
-5.  **Unusual or Surreal Details:** If any aspects of the image strike you as unusual, surreal, or defying normal expectations, incorporate these observations into your description.
-The output must be ONLY the prompt text itself, without any conversational text or explanations.`;
-
-} else if (targetImageGenModel === 'cinematographer') {
-    metaPrompt = `You are a seasoned cinematographer and film analyst with decades of experience on set and in post-production.
-Carefully analyze the provided image with the detailed eye of a true artist and technician. Provide a comprehensive visual breakdown of the shot.
-Your analysis must be structured with the following sections, providing insightful and well-reasoned inferences based on the visual evidence. Frame your analysis as an expert assessment, using phrases like "appears to be," "likely," "suggests," or "is reminiscent of."
-
-**Key Observation Point:** Pay special attention to any elements within the image that seem unusual, surreal, fantastical, or out of the ordinary. If such elements are present, ensure they are specifically mentioned and described in your analysis below.
-
-**Shot Achievement & Style:**
-Describe the overall style of the shot (e.g., film noir, high-key commercial, gritty documentary, magical realism). What decade or era does the visual language feel like it's from? How was this shot likely achieved technically (e.g., dolly shot, handheld, tripod with a long exposure, drone footage)?
-
-**Lighting Analysis:**
-Based on shadows, highlights, and reflections, infer the lighting setup.
-- **Setup:** Describe a plausible setup (e.g., "classic three-point lighting," "a single, large softbox," "natural light from a window augmented with a bounce card").
-- **Quality & Temp:** Describe the light quality (e.g., hard, soft, diffused) and infer the likely color temperature (e.g., "warm tungsten tones around 3200K," "cool daylight at 5600K," "mixed lighting with practical neon lamps").
-- **Power:** Give a conceptual indication of power (e.g., "low-wattage practicals," "powerful HMI for simulating sunlight").
-
-**Camera & Lens Analysis:**
-- **Sensor Size:** What sensor format does the image's depth of field, grain structure, and overall feel suggest (e.g., "looks like a full-frame sensor for shallow depth of field," "reminiscent of a Super 35 cinema camera," "could be a high-end Micro Four Thirds," "feels like a 1-inch sensor from a professional camcorder").
-- **Lens Choice:** What focal length and type of lens were likely used? (e.g., "a wide-angle lens around 24mm to capture the expansive scene," "a prime lens around 85mm for a flattering portrait," "a macro lens for the extreme detail," "a telephoto lens to compress the background").
-
-**Budget Estimation:**
-Provide a rough, conceptual budget range required to professionally recreate this single shot, considering the inferred lighting, camera, and potential location/set dressing. Categorize it (e.g., "Micro-Budget/Indie (~$0 - $5k)," "Professional Commercial (~$10k - $50k)," "High-End Cinema (~$100k+ for the setup)"). Justify your estimation briefly.
-
-The output must be the full, well-formatted analysis, not a single-line prompt. Use Markdown for headings.`;
-        
+            metaPromptAddon = `FINAL INSTRUCTION: Now, using your detailed analysis, compose a descriptive, natural language prompt suitable for an advanced AI like DALL-E or Imagen. Write in full, evocative sentences that paint a clear picture for the AI, describing the scene, subjects, style, and mood in a narrative fashion. The output must ONLY be the final prompt paragraph.`;
+        } else if (targetImageGenModel === 'cinematographer') {
+            metaPromptAddon = `FINAL INSTRUCTION: Now, using your detailed analysis, format your findings into a detailed report for a human. Use Markdown headings for each section (e.g., "**Style & Narrative:**", "**Lighting Analysis:**", "**Camera & Lens:**"). Write in clear, professional, and insightful language. The output must be ONLY this formatted analysis.`;
         } else {
-            throw new Error(`Unsupported target image generator model: ${targetImageGenModel}`);
+            throw new Error(`Unsupported target model for optimization: ${targetImageGenModel}`);
         }
 
-        console.log(`Meta-prompt for ${targetImageGenModel} (image-aware, using ${selectedApiProvider}): ... (log snippet)`);
+        // Combine the two parts into the final prompt for the LLM
+        const finalMetaPrompt = systemPrompt + "\n\n" + metaPromptAddon;
 
-        const maxTokensForAnalysis = 700; // Increased for a detailed breakdown
+        console.log(`Final meta prompt created for ${targetImageGenModel}. Sending to LLM...`);
+
+        // --- LLM Call (Cleaned up) ---
+        // Define max tokens based on the target model.
+        // This will eventually be replaced by a user-configurable setting from the store.
+        // The Cinematographer analysis needs more room to be descriptive.
+        const maxOutputTokens = targetImageGenModel === 'cinematographer' ? 1024 : 450;
+        console.log(`Setting max output tokens to: ${maxOutputTokens}`);
+
         if (selectedApiProvider === 'openai' && openai) {
             const response = await openai.chat.completions.create({
                 model: "gpt-4o",
-                messages: [{ role: "user", content: [ { type: "text", text: metaPrompt }, { type: "image_url", image_url: { "url": `data:image/png;base64,${imageBase64}` } } ] }],
-                max_tokens: maxTokensForAnalysis, // Use more tokens for this task
-                temperature: 0.6, // Allow for more descriptive creativity
+                messages: [{ role: "user", content: [ { type: "text", text: finalMetaPrompt }, { type: "image_url", image_url: { "url": `data:image/png;base64,${imageBase64}` } } ] }],
+                max_tokens: maxOutputTokens,
+                temperature: 0.6,
             });
             optimizedPrompt = response.choices[0]?.message?.content?.trim();
         } else if (selectedApiProvider === 'gemini' && genAI) {
             const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
             const imagePart = { inlineData: { data: imageBase64, mimeType: "image/png" } };
             const result = await model.generateContent({
-                contents: [{ role: "user", parts: [imagePart, { text: metaPrompt }] }],
-                generationConfig: { maxOutputTokens: maxTokensForAnalysis, temperature: 0.6 } // Use more tokens
+                contents: [{ role: "user", parts: [imagePart, { text: finalMetaPrompt }] }],
+                generationConfig: { maxOutputTokens: maxOutputTokens, temperature: 0.6 }
             });
             optimizedPrompt = result.response.text()?.trim();
         } else if (selectedApiProvider === 'local') {
+            // Your logic for a local server is preserved here. This is a great addition!
             const localApiUrl = store.get('localServerUrl');
             if (!localApiUrl) {
                 throw new Error('Local Server URL is not configured in settings.');
             }
             console.log(`Using Local Server for prompt generation at: ${localApiUrl}`);
-            const formattedMetaPromptForLlava = `<image>\n${metaPrompt}\nassistant:`;
             const response = await fetch(localApiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    image_base64: imageBase64, // Ensure image comes before prompt
-                    prompt: formattedMetaPromptForLlava,
+                    image_base64: imageBase64,
+                    prompt: `<image>\n${finalMetaPrompt}\nassistant:`, // A common format for LLaVA servers
                 })
             });
             if (!response.ok) {
@@ -492,13 +471,8 @@ The output must be the full, well-formatted analysis, not a single-line prompt. 
                 throw new Error(`Local server request failed with status ${response.status}: ${errorText}`);
             }
             const data = await response.json();
-            optimizedPrompt = data.text?.trim(); // Primary expected field
-            if (!optimizedPrompt && data.generated_prompt) { // Fallback 1
-                 optimizedPrompt = data.generated_prompt?.trim();
-            }
-            if (!optimizedPrompt && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) { // Fallback 2 (OpenAI-like)
-                optimizedPrompt = data.choices[0].message.content.trim();
-            }
+            // This robust fallback logic for different server response formats is excellent.
+            optimizedPrompt = data.text?.trim() || data.generated_prompt?.trim() || data.choices?.[0]?.message?.content?.trim();
         } else {
             throw new Error(`No valid AI API provider configured ('${selectedApiProvider}') or client initialized.`);
         }
@@ -518,11 +492,10 @@ The output must be the full, well-formatted analysis, not a single-line prompt. 
         anErrorOccurred = true;
     }
 
-    const finalWindowToUpdate = activeResultWindow || resultWindow; // Re-check as window might have been created
+    const finalWindowToUpdate = activeResultWindow || resultWindow;
     if (finalWindowToUpdate && !finalWindowToUpdate.isDestroyed()) {
         if (anErrorOccurred) {
-            finalWindowToUpdate.webContents.send('prompt:optimization-error', optimizedPrompt); // Send error message
-             // Also update content to show error, and ensure dropdown is correct
+            finalWindowToUpdate.webContents.send('prompt:optimization-error', optimizedPrompt);
             finalWindowToUpdate.webContents.send('prompt:display-optimized-content', { prompt: optimizedPrompt, selectedModel: targetImageGenModel });
         } else {
             finalWindowToUpdate.webContents.send('prompt:display-optimized-content', { prompt: optimizedPrompt, selectedModel: targetImageGenModel });
