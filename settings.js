@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Settings Handling Logic ---
     const openaiApiKeyInput = document.getElementById('openai-api-key');
     const googleApiKeyInput = document.getElementById('google-api-key');
+    const localServerUrlInput = document.getElementById('local-server-url');
     const saveSettingsButton = document.getElementById('save-settings');
     const statusMessage = document.getElementById('status-message');
     const providerRadios = document.querySelectorAll('input[name="api-provider"]');
@@ -49,6 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // API Keys and Provider
                 openaiApiKeyInput.value = settings.openaiApiKey || '';
                 googleApiKeyInput.value = settings.googleApiKey || '';
+                localServerUrlInput.value = settings.localServerUrl || 'https://localhost:8000'; // Default value if not set
                 const activeProvider = settings.apiProvider || 'openai';
                 const radioToCheck = document.getElementById(`provider-${activeProvider}`);
                 if (radioToCheck) radioToCheck.checked = true;
@@ -74,6 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const settings = {
             openaiApiKey: openaiApiKeyInput.value.trim(),
             googleApiKey: googleApiKeyInput.value.trim(),
+            localServerUrl: localServerUrlInput.value.trim(),
             apiProvider: selectedProvider,
             hotkey: newHotkeyString || hotkeyInput.value
         };

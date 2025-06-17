@@ -56,6 +56,15 @@ function initializeApiClients() {
         genAI = null;
         if (selectedApiProvider === 'gemini') console.warn("Warning: Google (Gemini) API Key is not configured in Settings or .env.");
     }
+
+    if (selectedApiProvider === 'local') {
+        const localApiUrl = store.get('localServerUrl');
+        if (localApiUrl) {
+            console.log(`Local Server is ACTIVE provider. URL: ${localApiUrl}`);
+        } else {
+            console.warn("Warning: Local Server is selected, but URL is not configured in Settings.");
+        }
+    }
 }
 
 // --- App Lifecycle (app.whenReady) ---
@@ -82,6 +91,11 @@ app.whenReady().then(async () => { // It MUST be async
         apiKeyError = "OpenAI API key is not configured. Please set it via Settings.";
     } else if (selectedApiProvider === 'gemini' && !genAI) {
         apiKeyError = "Google API key is not configured. Please set it via Settings.";
+    } else if (selectedApiProvider === 'local') {
+        const localUrl = store.get('localServerUrl');
+        if (!localUrl || localUrl.trim() === '') {
+            apiKeyError = "Local Server is selected, but its URL is not configured. Please set it via Settings.";
+        }
     }
 
     if (apiKeyError) {
@@ -238,10 +252,22 @@ function registerGlobalHotkey(hotkeyToRegister, fallbackHotkey) {
 
 // --- Capture Window Management ---
 function toggleCaptureWindow() {
-    if ((selectedApiProvider === 'openai' && !openai) || (selectedApiProvider === 'gemini' && !genAI)) {
-        displayErrorInNewResultWindow(`AI Provider (${selectedApiProvider}) client not initialized. Check API key.`);
+    let providerError = null;
+    if (selectedApiProvider === 'openai' && !openai) {
+        providerError = `AI Provider (OpenAI) client not initialized. Check API key.`;
+    } else if (selectedApiProvider === 'gemini' && !genAI) {
+        providerError = `AI Provider (Gemini) client not initialized. Check API key.`;
+    } else if (selectedApiProvider === 'local') {
+        const localUrl = store.get('localServerUrl');
+        if (!localUrl || localUrl.trim() === '') {
+            providerError = `AI Provider (Local Server) URL is not configured. Please set it in Settings.`;
+        }
+    }
+    if (providerError) {
+        displayErrorInNewResultWindow(providerError);
         return;
     }
+
     if (captureWindow) {
         captureWindow.close();
     } else {
@@ -364,21 +390,24 @@ Your generated Midjourney prompt should:
 3.  Incorporate common Midjourney keywords for overall visual quality or specific desired aesthetics ONLY IF they genuinely enhance the accurate representation of the image's actual content and the inferred details from point 2. Prioritize faithfulness to the image over imposing excessive stylization if the image itself is simple or mundane.
 4.  Include relevant Midjourney parameters. If the image's shape or content strongly suggests a specific aspect ratio (e.g., wide, square, portrait), try to include an appropriate --ar parameter (like --ar 16:9, --ar 1:1, --ar 2:3, etc.). If no specific aspect ratio is clearly evident from the image, do not add an --ar parameter. Do not add a version parameter.
 5.  **Style Description:** Clearly specify the style of the image, such as "anime," "realistic," "illustration," "cartoon," etc., to ensure the prompt accurately reflects the desired output style.
+6.  **Unusual or Surreal Elements:** If the image contains any elements that appear unusual, out of place, surreal, or fantastical, explicitly note these observations in the prompt.
 The output must be ONLY the Midjourney prompt itself, with no conversational text, preambles, or explanations.`;
 
         } else if (targetImageGenModel === 'stablediffusion') {
-            metaPrompt = `You are an expert Midjourney prompt engineer.
-Carefully analyze the provided image. Based on its visual content, composition, subject matter, and any discernible artistic style, create an optimized and highly effective Midjourney prompt.
-Your generated Midjourney prompt should:
-1.  Faithfully represent the key elements, objects, and overall scene depicted in the image. Do not invent significant details or subjects that are not present or strongly implied in the image.
-2.  Be highly descriptive of what is visually present. Specifically try to infer and include details about:
+            metaPrompt = `You are an expert Stable Diffusion prompt engineer.
+Carefully analyze the provided image. Based on its visual content, composition, subject matter, and any discernible artistic style, create an optimized and highly effective Stable Diffusion prompt.
+Your generated Stable Diffusion prompt should:
+1.  **Object Detailing:** Clearly identify and describe the primary objects and subjects within the image. Include details about their appearance, texture, and any notable features.
+2.  Faithfully represent the key elements and overall scene depicted in the image. Do not invent significant details or subjects that are not present or strongly implied in the image.
+3.  Be highly descriptive of what is visually present. Specifically try to infer and include details about:
     a.  **Emotions and Mood:** If the image clearly portrays specific emotions in subjects (e.g., joyful, pensive, surprised) or an overall distinct mood (e.g., serene, mysterious, energetic, melancholic), incorporate these observations.
     b.  **Colour Grading and Lighting:** Describe the prominent color palette, any apparent color grading style (e.g., "warm vintage tones," "cool cinematic blues," "vibrant neon palette," "desaturated and moody," "monochromatic with high contrast"), and key lighting characteristics (e.g., "soft diffused daylight," "dramatic chiaroscuro," "golden hour glow," "artificial studio lighting").
     c.  **Apparent Camera Type/Shot Style:** If the image's quality, perspective, depth of field, or artifacts suggest a particular camera type or shot style (e.g., "shot on a vintage film camera," "crisp DSLR quality," "smartphone photo aesthetic," "wide-angle architectural shot," "intimate macro detail," "dynamic action shot," "security camera footage style," "drone's eye view"), include such a description. If a specific camera isn't obvious, you can suggest a general photographic quality (e.g., "professional photograph quality") if appropriate, or omit this if the image is clearly illustrative or abstract.
-3.  Incorporate common Midjourney keywords for overall visual quality or specific desired aesthetics ONLY IF they genuinely enhance the accurate representation of the image's actual content and the inferred details from point 2. Prioritize faithfulness to the image over imposing excessive stylization if the image itself is simple or mundane.
-4.  Include relevant Midjourney parameters. If the image's shape or content strongly suggests a specific aspect ratio (e.g., wide, square, portrait), try to include an appropriate --ar parameter (like --ar 16:9, --ar 1:1, --ar 2:3, etc.). If no specific aspect ratio is clearly evident from the image, do not add an --ar parameter. Do not add a version parameter.
-5.  **Style Description:** Clearly specify the style of the image, such as "anime," "realistic," "illustration," "cartoon," etc., to ensure the prompt accurately reflects the desired output style.
-The output must be ONLY the Midjourney prompt itself, with no conversational text, preambles, or explanations.`;
+4.  Incorporate keywords and phrases commonly effective for Stable Diffusion for overall visual quality or specific desired aesthetics ONLY IF they genuinely enhance the accurate representation of the image's actual content and the inferred details from previous points. Prioritize faithfulness to the image.
+5.  **Style Description:** Clearly specify the style of the image, such as "anime," "photorealistic," "illustration," "cartoon," "oil painting," etc., to ensure the prompt accurately reflects the desired output style.
+6.  **Unusual or Surreal Elements:** If the image features anything unexpected, surreal, or out of the ordinary, make sure to include a description of these elements.
+7.  If the image's aspect ratio is clearly non-square (e.g., wide panoramic, tall portrait), you can suggest this descriptively (e.g., "wide aspect ratio", "portrait aspect ratio") but avoid specific numerical ratios unless explicitly requested for Stable Diffusion.
+The output must be ONLY the Stable Diffusion prompt itself, as a string of keywords and descriptive phrases, with no conversational text, preambles, or explanations.`;
 
         } else if (targetImageGenModel === 'naturallanguage') {
             metaPrompt = `You are an expert prompt engineer for advanced image generation models that excel at understanding natural language (such as DALL-E, Google's Imagen, or similar).
@@ -392,12 +421,15 @@ Your generated prompt should:
     d.  **Artistic Style:** If the image exhibits a recognizable artistic style (e.g., "rendered in the style of impressionist oil painting," "a clean, minimalist vector illustration," "looks like a hyperrealistic 3D model," "vintage sci-fi book cover art"), identify and include it. If no strong artistic style is present, focus on achieving a clear, realistic depiction.
 3.  Focus on a well-composed and comprehensive description rather than excessive keyword stuffing. The prompt should be easy for an advanced AI to understand and follow.
 4.  If the image's dimensions clearly suggest a particular aspect ratio (e.g., "a panoramic vista," "a tall, slender portrait format"), you may note this descriptively.
+5.  **Unusual or Surreal Details:** If any aspects of the image strike you as unusual, surreal, or defying normal expectations, incorporate these observations into your description.
 The output must be ONLY the prompt text itself, without any conversational text or explanations.`;
 
 } else if (targetImageGenModel === 'cinematographer') {
     metaPrompt = `You are a seasoned cinematographer and film analyst with decades of experience on set and in post-production.
 Carefully analyze the provided image with the detailed eye of a true artist and technician. Provide a comprehensive visual breakdown of the shot.
 Your analysis must be structured with the following sections, providing insightful and well-reasoned inferences based on the visual evidence. Frame your analysis as an expert assessment, using phrases like "appears to be," "likely," "suggests," or "is reminiscent of."
+
+**Key Observation Point:** Pay special attention to any elements within the image that seem unusual, surreal, fantastical, or out of the ordinary. If such elements are present, ensure they are specifically mentioned and described in your analysis below.
 
 **Shot Achievement & Style:**
 Describe the overall style of the shot (e.g., film noir, high-key commercial, gritty documentary, magical realism). What decade or era does the visual language feel like it's from? How was this shot likely achieved technically (e.g., dolly shot, handheld, tripod with a long exposure, drone footage)?
@@ -440,6 +472,33 @@ The output must be the full, well-formatted analysis, not a single-line prompt. 
                 generationConfig: { maxOutputTokens: maxTokensForAnalysis, temperature: 0.6 } // Use more tokens
             });
             optimizedPrompt = result.response.text()?.trim();
+        } else if (selectedApiProvider === 'local') {
+            const localApiUrl = store.get('localServerUrl');
+            if (!localApiUrl) {
+                throw new Error('Local Server URL is not configured in settings.');
+            }
+            console.log(`Using Local Server for prompt generation at: ${localApiUrl}`);
+            const formattedMetaPromptForLlava = `<image>\n${metaPrompt}\nassistant:`;
+            const response = await fetch(localApiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    image_base64: imageBase64, // Ensure image comes before prompt
+                    prompt: formattedMetaPromptForLlava,
+                })
+            });
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Local server request failed with status ${response.status}: ${errorText}`);
+            }
+            const data = await response.json();
+            optimizedPrompt = data.text?.trim(); // Primary expected field
+            if (!optimizedPrompt && data.generated_prompt) { // Fallback 1
+                 optimizedPrompt = data.generated_prompt?.trim();
+            }
+            if (!optimizedPrompt && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) { // Fallback 2 (OpenAI-like)
+                optimizedPrompt = data.choices[0].message.content.trim();
+            }
         } else {
             throw new Error(`No valid AI API provider configured ('${selectedApiProvider}') or client initialized.`);
         }
@@ -514,6 +573,7 @@ ipcMain.handle('settings:get-settings', async () => {
     return {
         openaiApiKey: store.get('openaiApiKey', ''),
         googleApiKey: store.get('googleApiKey', ''),
+        localServerUrl: store.get('localServerUrl', 'https://localhost:8000'),
         apiProvider: store.get('apiProvider', 'openai'),
         hotkey: store.get('captureHotkey', defaultHotkey)
     };
@@ -522,9 +582,10 @@ ipcMain.handle('settings:get-settings', async () => {
 ipcMain.handle('settings:save-settings', async (event, settings) => {
     try {
         // Save API Keys and Provider
-        if (typeof settings.openaiApiKey === 'string') store.set('openaiApiKey', settings.openaiApiKey);
-        if (typeof settings.googleApiKey === 'string') store.set('googleApiKey', settings.googleApiKey);
-        if (['openai', 'gemini'].includes(settings.apiProvider)) store.set('apiProvider', settings.apiProvider);
+        if (typeof settings.openaiApiKey === 'string') store.set('openaiApiKey', settings.openaiApiKey.trim());
+        if (typeof settings.googleApiKey === 'string') store.set('googleApiKey', settings.googleApiKey.trim());
+        if (typeof settings.localServerUrl === 'string') store.set('localServerUrl', settings.localServerUrl.trim());
+        if (['openai', 'gemini', 'local'].includes(settings.apiProvider)) store.set('apiProvider', settings.apiProvider);
         
         // Re-initialize API clients to apply changes immediately
         initializeApiClients();
