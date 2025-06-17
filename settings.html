@@ -97,6 +97,19 @@
                     <label for="local-server-url">Local Server URL:</label>
                     <input type="text" id="local-server-url" placeholder="https://localhost:8000">
                 </div>
+                <div class="form-group">
+                    <label for="ollama-model-name">Ollama Model Name:</label>
+                    <input type="text" id="ollama-model-name" placeholder="llava:7b">
+                </div>
+                <div class="form-group">
+                    <label for="ollama-api-path">Ollama API Endpoint Path:</label>
+                    <input type="text" id="ollama-api-path" placeholder="/api/generate">
+                </div>
+                <div class="form-group">
+                    <label for="ollama-custom-options">Custom Ollama Options (JSON):</label>
+                    <textarea id="ollama-custom-options" rows="3" placeholder='e.g., {"temperature": 0.7, "num_predict": 256}'></textarea>
+                    <p class="description">Enter valid JSON for Ollama's 'options' field. Invalid JSON will be ignored.</p>
+                </div>
             </div>
 
             <div id="Hotkey" class="tab-content">

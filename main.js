@@ -28,6 +28,8 @@ let lastCapturedBase64Image = null;
 let lastSelectedGenerator = 'naturallanguage'; // Default generator, will be remembered per session
 let store;
 
+const appIconPath = path.join(__dirname, 'assets', 'icon.png');
+
 // --- API Clients Initialization ---
 let openai;
 let genAI;
@@ -121,6 +123,7 @@ function createSettingsWindow() {
         width: 480,
         height: 400,
         title: 'Settings',
+        icon: appIconPath,
         webPreferences: {
             preload: path.join(__dirname, 'preload_settings.js'),
             contextIsolation: true,
@@ -281,6 +284,7 @@ function createCaptureWindow() {
         x: primaryDisplay.bounds.x, y: primaryDisplay.bounds.y,
         width: primaryDisplay.bounds.width, height: primaryDisplay.bounds.height,
         frame: false, transparent: true, alwaysOnTop: true,
+        icon: appIconPath,
         webPreferences: { preload: path.join(__dirname, 'preload_capture.js'), contextIsolation: true, nodeIntegration: false, },
         skipTaskbar: true, focusable: true,
     });
@@ -304,6 +308,7 @@ function createResultWindow(initialPromptContent, selectedModelForDropdown) {
         x: primaryDisplay.bounds.x + primaryDisplay.bounds.width - winWidth - 20,
         y: primaryDisplay.bounds.y + 20,
         alwaysOnTop: true, resizable: false, frame: true,
+        icon: appIconPath,
         webPreferences: { preload: path.join(__dirname, 'preload_result.js'), contextIsolation: true, nodeIntegration: false, },
         title: "AI-Generated Prompt", show: false,
     });
@@ -452,27 +457,65 @@ After completing this internal analysis, you will follow the final instruction t
             });
             optimizedPrompt = result.response.text()?.trim();
         } else if (selectedApiProvider === 'local') {
-            // Your logic for a local server is preserved here. This is a great addition!
-            const localApiUrl = store.get('localServerUrl');
-            if (!localApiUrl) {
+            let localApiUrlFromSettings = store.get('localServerUrl');
+            if (!localApiUrlFromSettings || localApiUrlFromSettings.trim() === '') {
                 throw new Error('Local Server URL is not configured in settings.');
             }
-            console.log(`Using Local Server for prompt generation at: ${localApiUrl}`);
-            const response = await fetch(localApiUrl, {
+            localApiUrlFromSettings = localApiUrlFromSettings.trim();
+            if (localApiUrlFromSettings.endsWith('/')) {
+                localApiUrlFromSettings = localApiUrlFromSettings.slice(0, -1);
+            }
+
+            let apiPath = store.get('ollamaApiPath', '/api/generate');
+            if (!apiPath || apiPath.trim() === '') {
+                apiPath = '/api/generate'; // Default if empty
+            }
+            apiPath = apiPath.trim();
+            if (!apiPath.startsWith('/')) {
+                apiPath = '/' + apiPath;
+            }
+            const ollamaEndpoint = `${localApiUrlFromSettings}${apiPath}`;
+            
+            const modelName = store.get('ollamaModelName', 'llava:7b'); // Get from store, default if not found
+            if (!modelName || modelName.trim() === '') {
+                throw new Error('Ollama Model Name is not configured in settings for Local Server provider.');
+            }
+            console.log(`Using Local Server (Ollama) for prompt generation at: ${ollamaEndpoint} with model: ${modelName}`);
+            
+            let ollamaPayload = {
+                model: modelName, // Use the model name from settings
+                prompt: finalMetaPrompt, // Using the existing finalMetaPrompt variable
+                images: [imageBase64], // Ollama expects an array of base64 images
+                stream: false
+            };
+
+            const customOptionsString = store.get('ollamaCustomOptions', '');
+            if (customOptionsString && customOptionsString.trim() !== '') {
+                try {
+                    const customOptions = JSON.parse(customOptionsString);
+                    if (typeof customOptions === 'object' && customOptions !== null) {
+                        ollamaPayload.options = customOptions;
+                        console.log('Applying custom Ollama options:', customOptions);
+                    } else {
+                        console.warn('Custom Ollama options string did not parse to an object, ignoring:', customOptionsString);
+                    }
+                } catch (e) {
+                    console.warn('Error parsing custom Ollama options JSON, ignoring:', e.message, customOptionsString);
+                }
+            }
+
+            const response = await fetch(ollamaEndpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    image_base64: imageBase64,
-                    prompt: `<image>\n${finalMetaPrompt}\nassistant:`, // A common format for LLaVA servers
-                })
+                body: JSON.stringify(ollamaPayload)
             });
+
             if (!response.ok) {
                 const errorText = await response.text();
-                throw new Error(`Local server request failed with status ${response.status}: ${errorText}`);
+                throw new Error(`Local server (Ollama) request to ${ollamaEndpoint} failed with status ${response.status}: ${errorText}`);
             }
             const data = await response.json();
-            // This robust fallback logic for different server response formats is excellent.
-            optimizedPrompt = data.text?.trim() || data.generated_prompt?.trim() || data.choices?.[0]?.message?.content?.trim();
+            optimizedPrompt = data.response?.trim(); // Ollama /api/generate non-streaming typically uses 'response'
         } else {
             throw new Error(`No valid AI API provider configured ('${selectedApiProvider}') or client initialized.`);
         }
@@ -547,6 +590,9 @@ ipcMain.handle('settings:get-settings', async () => {
         openaiApiKey: store.get('openaiApiKey', ''),
         googleApiKey: store.get('googleApiKey', ''),
         localServerUrl: store.get('localServerUrl', 'https://localhost:8000'),
+        ollamaModelName: store.get('ollamaModelName', 'llava:7b'), // Added
+        ollamaApiPath: store.get('ollamaApiPath', '/api/generate'), // Added
+        ollamaCustomOptions: store.get('ollamaCustomOptions', ''), // Added
         apiProvider: store.get('apiProvider', 'openai'),
         hotkey: store.get('captureHotkey', defaultHotkey)
     };
@@ -558,6 +604,9 @@ ipcMain.handle('settings:save-settings', async (event, settings) => {
         if (typeof settings.openaiApiKey === 'string') store.set('openaiApiKey', settings.openaiApiKey.trim());
         if (typeof settings.googleApiKey === 'string') store.set('googleApiKey', settings.googleApiKey.trim());
         if (typeof settings.localServerUrl === 'string') store.set('localServerUrl', settings.localServerUrl.trim());
+        if (typeof settings.ollamaModelName === 'string') store.set('ollamaModelName', settings.ollamaModelName.trim()); // Added
+        if (typeof settings.ollamaApiPath === 'string') store.set('ollamaApiPath', settings.ollamaApiPath.trim()); // Added
+        if (typeof settings.ollamaCustomOptions === 'string') store.set('ollamaCustomOptions', settings.ollamaCustomOptions.trim()); // Added
         if (['openai', 'gemini', 'local'].includes(settings.apiProvider)) store.set('apiProvider', settings.apiProvider);
         
         // Re-initialize API clients to apply changes immediately

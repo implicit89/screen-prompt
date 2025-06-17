@@ -35,6 +35,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const openaiApiKeyInput = document.getElementById('openai-api-key');
     const googleApiKeyInput = document.getElementById('google-api-key');
     const localServerUrlInput = document.getElementById('local-server-url');
+    const ollamaModelNameInput = document.getElementById('ollama-model-name'); // Added
+    const ollamaApiPathInput = document.getElementById('ollama-api-path'); // Added
+    const ollamaCustomOptionsInput = document.getElementById('ollama-custom-options'); // Added
     const saveSettingsButton = document.getElementById('save-settings');
     const statusMessage = document.getElementById('status-message');
     const providerRadios = document.querySelectorAll('input[name="api-provider"]');
@@ -51,6 +54,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 openaiApiKeyInput.value = settings.openaiApiKey || '';
                 googleApiKeyInput.value = settings.googleApiKey || '';
                 localServerUrlInput.value = settings.localServerUrl || 'https://localhost:8000'; // Default value if not set
+                ollamaModelNameInput.value = settings.ollamaModelName || 'llava:7b'; // Added, with default
+                ollamaApiPathInput.value = settings.ollamaApiPath || '/api/generate'; // Added, with default
+                ollamaCustomOptionsInput.value = settings.ollamaCustomOptions || ''; // Added, with default
                 const activeProvider = settings.apiProvider || 'openai';
                 const radioToCheck = document.getElementById(`provider-${activeProvider}`);
                 if (radioToCheck) radioToCheck.checked = true;
@@ -77,6 +83,9 @@ document.addEventListener('DOMContentLoaded', () => {
             openaiApiKey: openaiApiKeyInput.value.trim(),
             googleApiKey: googleApiKeyInput.value.trim(),
             localServerUrl: localServerUrlInput.value.trim(),
+            ollamaModelName: ollamaModelNameInput.value.trim(), // Added
+            ollamaApiPath: ollamaApiPathInput.value.trim(), // Added
+            ollamaCustomOptions: ollamaCustomOptionsInput.value.trim(), // Added
             apiProvider: selectedProvider,
             hotkey: newHotkeyString || hotkeyInput.value
         };
