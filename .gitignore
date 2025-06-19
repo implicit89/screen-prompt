@@ -53,4 +53,6 @@ pids/
 .yarn-integrity
 
 # Asset files
-.psd
+*.psd
+assets/e5e171a0_339b_482c_8b6c_c6b8216dace7-e5e171a0-339b-482c-8b6c-c6b8216dace7.jpg
+assets/ScreenPromptLogo.png

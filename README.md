@@ -13,7 +13,7 @@ A desktop application for macOS and Windows that allows users to select an area 
 
 1.  **Prerequisites:**
     * Node.js (which includes npm). Download from [nodejs.org](https://nodejs.org/).
-    * An API Key from your chosen AI Service Provider that supports vision capabilities.
+    * An API Key from your chosen AI Service Provider that supports vision capabilities or an local ollama server.
 
 2.  **Clone the Repository:**
     ```bash
@@ -31,47 +31,62 @@ A desktop application for macOS and Windows that allows users to select an area 
     `npm run rebuild-sharp`.
 
 4.  **Configure AI Service Provider & API Keys:**
-    This application requires API credentials to communicate with an AI service for image description. Configuration is done via an `.env` file in the project root or through the settings page.
+    Configuration of your chosen AI Service Provider (OpenAI, Google Gemini, or a Local Server like Ollama) is primarily managed through the **in-app Settings page**. This is the recommended method. The `.env` file method is secondary and can be used for initial fallback, especially for OpenAI and Gemini API keys.
 
-    * **Create the `.env` file:**
-        Copy the `.env_example` file to a new file named `.env`:
-        ```bash
-        cp .env_example .env
-        ```
-        (On Windows, use `copy .env_example .env`)
+    *   **Using the In-App Settings Page (Recommended):**
+        Access the Settings page via the application menu (File > Settings or Screen Prompt > Settings on macOS) or by pressing `CmdOrCtrl+,`. This is the most comprehensive way to set up your AI provider.
 
-    * **Edit the `.env` file:**
-        Open the `.env` file in a text editor. It should look like this:
-        ```
-        OPENAI_API_KEY=your_openai_api_key_here
-        GOOGLE_API_KEY=your_google_api_key_here
-        API_PROVIDER=openai # Set to "openai" or "gemini"
-        ```
+        The Settings page allows you to:
+        *   Select the active AI Service Provider (OpenAI, Google Gemini, or Local Server).
+        *   Enter API keys for OpenAI and Google Gemini.
+        *   Configure all necessary details for the Local Server (Ollama) provider.
 
-    * **Set the `API_PROVIDER`:**
-        Change the value of `API_PROVIDER` to specify which AI service you want to use. Currently supported values are:
-        * `openai`
-        * `gemini`
-        Example:
-        ```
-        API_PROVIDER=gemini
-        ```
+    *   **Configuring Specific Providers via Settings Page:**
 
-    * **Set the API Key for the Chosen Provider:**
-        * If `API_PROVIDER=openai`, fill in your OpenAI API key for `OPENAI_API_KEY`.
-        * If `API_PROVIDER=gemini`, fill in your Google AI Studio API key for `GOOGLE_API_KEY`. You can obtain a Google API key from [Google AI Studio](https://aistudio.google.com/app/apikey).
-        * Leave the API key for the unused provider blank or as is (it won't be used if that provider isn't selected).
+        *   **OpenAI or Google Gemini:**
+            1.  Open Settings.
+            2.  Select "OpenAI" or "Google" as the active provider.
+            3.  Enter the respective API key in its field.
+            4.  Click "Save Settings".
 
-        Example for using Gemini:
-        ```
-        OPENAI_API_KEY=
-        GOOGLE_API_KEY=your_actual_google_ai_studio_key_here
-        API_PROVIDER=gemini
-        ```
+        *   **Local Server (e.g., Ollama):**
+            1.  Ensure your local LLM server (like Ollama with a model like LLaVA) is running.
+            2.  Open Settings in Screen Prompt.
+            3.  Select "Local Server" as the active provider.
+            4.  Fill in the following fields:
+                *   **Local Server URL:** The base URL of your Ollama server (e.g., `http://localhost:11434`).
+                *   **Ollama Model Name:** The name of the model you want to use (e.g., `llava:7b`, `bakllava`).
+                *   **Ollama API Endpoint Path:** The API path for generation (defaults to `/api/generate`, usually correct for Ollama).
+                *   **Custom Ollama Options (JSON):** Optional JSON string for advanced model parameters (e.g., `{"temperature": 0.7, "num_predict": 250}`).
+            5.  Click "Save Settings".
 
-    * **Security Note:** This method of storing API keys is suitable for local development and this MVP. For a production application, consider more secure key management solutions. The `.env` file should be included in your `.gitignore` file to prevent accidental commits of sensitive keys.
+    *   **Using the `.env` file (Optional Fallback):**
+        If you prefer, you can create a `.env` file in the project root for initial setup, primarily for OpenAI/Gemini API keys if you don't want to use the settings UI for them initially:
+        1.  Copy `.env_example` to `.env` in your project root:
+            ```bash
+            # On macOS/Linux
+            cp .env_example .env
+            # On Windows
+            copy .env_example .env
+            ```
+        2.  Edit the `.env` file. It may look like this:
+            ```
+            OPENAI_API_KEY=your_openai_api_key_here
+            GOOGLE_API_KEY=your_google_api_key_here
+            API_PROVIDER=openai # Can be "openai", "gemini", or "local"
+            ```
+        3.  The `API_PROVIDER` field in `.env` can set the initial default provider if no settings have been saved via the UI. If `API_PROVIDER=local` is set, its specific parameters (URL, model name, etc.) **must still be configured via the Settings page** to function correctly.
+        4.  **Important:** Settings saved through the in-app Settings page will always override the `.env` file for subsequent application launches.
 
-    * **Settings Page:** You can also configure your API settings directly from the application's settings page.
+    *   **Security Note:** API keys are sensitive. If you use the `.env` file, ensure it is included in your `.gitignore` to prevent accidental commits. When sharing the application, instruct users to configure their own API keys or local server settings using the in-app Settings page. Settings managed via the UI are stored locally in the application's configuration file (managed by `electron-store`) and are not intended for version control or widespread sharing.
+=======
+<<<<<<< ORIGINAL
+* ✅ **API Key Error:** If the API key for the selected `API_PROVIDER` is missing or invalid, confirm an appropriate error message is shown.
+* ✅ **Application Termination:** Ensure global shortcuts are unregistered when the app quits.
+=======
+* ✅ **API Key/Configuration Error:** If an API key is missing/invalid for OpenAI/Gemini, or if the Local Server provider is selected but its URL or Model Name is not configured, confirm an appropriate error message is shown.
+* ✅ **Application Termination:** Ensure global shortcuts are unregistered when the app quits.
+* ✅ **Local Server Functionality:** If using the Local Server provider, confirm it correctly processes images and returns descriptions based on your local LLM setup.
 
 ## Running the Application
 
@@ -102,8 +117,8 @@ A desktop application for macOS and Windows that allows users to select an area 
     * While the screen selection overlay is active, press the `Escape` key to cancel the selection process and close the overlay.
 
 6.  **Quitting the Application:**
-    * **macOS:** Right-click the application icon in the Dock (if it appears) and select "Quit", or ensure the app has focus and press `Cmd + Q`.
-    * **Windows/Linux:** Closing the result window will not quit the background app. You may need to find the process in Task Manager or use `Ctrl+C` in the terminal where you ran `npm start`. (A system tray icon for management is out of scope for MVP).
+    * **macOS:** Right-click the application icon in the Dock (if it appears) and select "Quit", or ensure the app has focus and press `Cmd + Q`. Alternatively, use the application menu (e.g., Screen Prompt > Quit Screen Prompt).
+    * **Windows/Linux:** Right-click the application icon in the system tray and select "Quit Screen Prompt". Closing individual windows (like Results or Settings) will typically not quit the application. If you started the app via `npm start` in a terminal, `Ctrl+C` in that terminal will also stop it.
 
 ## Basic Verification Steps
 
@@ -119,8 +134,10 @@ A desktop application for macOS and Windows that allows users to select an area 
 
 ## Out of Scope for MVP (Future Work)
 
-* Advanced selection methods (circular, freehand drawing).
-* Integration with additional local or cloud-based AI/LLM services beyond the initially configured ones.
-* Detailed progress indicators or loading animations.
-* Support for multi-monitor screen selection beyond the primary display.
-* Advanced, production-grade API key management solutions.
+* Advanced selection methods (e.g., circular, freehand drawing, specific window selection).
+* Support for a wider range of specific cloud AI services or local LLM backends beyond the current OpenAI, Gemini, and configurable Ollama setup.
+* Detailed progress indicators or loading animations during AI processing (the current status is basic text in the result window).
+* Enhanced multi-monitor support for screen capture (current implementation is primarily focused on the primary display for capture initiation and result window placement).
+* Production-grade secure API key management (e.g., using OS-level credential managers like macOS Keychain or Windows Credential Manager). The current system stores settings, including API keys if entered, in a local configuration file managed by `electron-store`.
+* A more user-friendly UI for managing multiple local server profiles or a list of favorite Ollama models.
+* Automatic application updates.
