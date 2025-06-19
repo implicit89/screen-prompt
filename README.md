@@ -13,7 +13,7 @@ A desktop application for macOS and Windows that allows users to select an area 
 
 1.  **Prerequisites:**
     * Node.js (which includes npm). Download from [nodejs.org](https://nodejs.org/).
-    * An API Key from your chosen AI Service Provider that supports vision capabilities or an local ollama server.
+    * An API Key from your chosen AI Service Provider that supports vision capabilities or a local ollama server.
 
 2.  **Clone the Repository:**
     ```bash
@@ -37,7 +37,7 @@ A desktop application for macOS and Windows that allows users to select an area 
         Access the Settings page via the application menu (File > Settings or Screen Prompt > Settings on macOS) or by pressing `CmdOrCtrl+,`. This is the most comprehensive way to set up your AI provider.
 
         The Settings page allows you to:
-        *   Select the active AI Service Provider (OpenAI, Google Gemini, or Local Server).
+        *   Select the active AI Service Provider (OpenAI, Google Gemini, or Local Server (Ollama)).
         *   Enter API keys for OpenAI and Google Gemini.
         *   Configure all necessary details for the Local Server (Ollama) provider.
 
@@ -52,9 +52,9 @@ A desktop application for macOS and Windows that allows users to select an area 
         *   **Local Server (e.g., Ollama):**
             1.  Ensure your local LLM server (like Ollama with a model like LLaVA) is running.
             2.  Open Settings in Screen Prompt.
-            3.  Select "Local Server" as the active provider.
+            3.  Select "Local Server (Ollama)" as the active provider.
             4.  Fill in the following fields:
-                *   **Local Server URL:** The base URL of your Ollama server (e.g., `http://localhost:11434`).
+                *   **Local Server URL (Ollama):** The base URL of your Ollama server (e.g., `http://localhost:11434`).
                 *   **Ollama Model Name:** The name of the model you want to use (e.g., `llava:7b`, `bakllava`).
                 *   **Ollama API Endpoint Path:** The API path for generation (defaults to `/api/generate`, usually correct for Ollama).
                 *   **Custom Ollama Options (JSON):** Optional JSON string for advanced model parameters (e.g., `{"temperature": 0.7, "num_predict": 250}`).
@@ -78,15 +78,7 @@ A desktop application for macOS and Windows that allows users to select an area 
         3.  The `API_PROVIDER` field in `.env` can set the initial default provider if no settings have been saved via the UI. If `API_PROVIDER=local` is set, its specific parameters (URL, model name, etc.) **must still be configured via the Settings page** to function correctly.
         4.  **Important:** Settings saved through the in-app Settings page will always override the `.env` file for subsequent application launches.
 
-    *   **Security Note:** API keys are sensitive. If you use the `.env` file, ensure it is included in your `.gitignore` to prevent accidental commits. When sharing the application, instruct users to configure their own API keys or local server settings using the in-app Settings page. Settings managed via the UI are stored locally in the application's configuration file (managed by `electron-store`) and are not intended for version control or widespread sharing.
-=======
-<<<<<<< ORIGINAL
-* ✅ **API Key Error:** If the API key for the selected `API_PROVIDER` is missing or invalid, confirm an appropriate error message is shown.
-* ✅ **Application Termination:** Ensure global shortcuts are unregistered when the app quits.
-=======
-* ✅ **API Key/Configuration Error:** If an API key is missing/invalid for OpenAI/Gemini, or if the Local Server provider is selected but its URL or Model Name is not configured, confirm an appropriate error message is shown.
-* ✅ **Application Termination:** Ensure global shortcuts are unregistered when the app quits.
-* ✅ **Local Server Functionality:** If using the Local Server provider, confirm it correctly processes images and returns descriptions based on your local LLM setup.
+         *   **Security Note:** API keys are sensitive. If you are using the `.env` file (perhaps after cloning the repository for development), ensure it is included in your `.gitignore` file to prevent accidental commits of your personal keys. When sharing the application with others, instruct them to configure their own API keys or local server settings using the in-app Settings page. Settings managed via the UI are stored locally in the application's configuration file (managed by `electron-store`) and are not intended for version control or widespread sharing.
 
 ## Running the Application
 
