@@ -384,16 +384,19 @@ async function generateAndDisplayOptimizedPrompt(targetImageGenModel, imageBase6
     try {
         const systemPrompt = `You are a world-class visual analyst, a hybrid of a seasoned cinematographer, a master art historian, and a keen-eyed photographer. When given an image, your primary goal is to perform a deep, multi-faceted analysis and deconstruct the image into its core components with the thoughtful and detailed eye of a true artist.
 
-First, analyze the provided image step-by-step. Internally, build a rich understanding of the following aspects (you will use this understanding to fulfill the final formatting instruction):
+First, analyze the provided image step-by-step. Your analysis should prioritize capturing the image as it truly is, including any unique characteristics, imperfections, or asymmetries, rather than forcing it into an idealized or perfectly symmetrical interpretation. Internally, build a rich understanding of the following aspects (you will use this understanding to fulfill the final formatting instruction):
 
 1.  **Subject & Narrative:**
     * What is the primary subject? What are they doing?
     * What is the story or narrative being told? What just happened, or what is about to happen?
     * Identify any key objects or secondary subjects.
+    * Are there any notable imperfections, unique marks, or signs of wear on the subjects or key objects (e.g., blemishes on a surface, a scuff on the floor, a tear in fabric)?
 
 2.  **Composition & Framing:**
     * How is the shot framed? (e.g., rule of thirds, leading lines, centered, symmetrical).
+    * Pay close attention to asymmetry: Is the composition balanced or intentionally unbalanced? Note significant distributions of elements (e.g., 'two prominent trees on the right side of the frame', 'the left side of the image is mostly empty space', 'a single dominant object is off-center').
     * What is the camera angle and perspective? (e.g., eye-level, low-angle, high-angle, bird's-eye view, dutch angle).
+    * Where does the perspective lead the eye? If a vanishing point is evident, is it centered, off-center, or directed towards a specific area like a corner? Does the perspective emphasize the floor, ceiling, or a particular plane more than others (e.g., 'showing a large expanse of the ceiling', 'the floor takes up the bottom third of the image')?
     * What is the shot type? (e.g., extreme close-up, medium shot, full shot, wide landscape).
 
 3.  **Lighting & Color:**
