@@ -6,7 +6,8 @@
   "scripts": {
     "start": "electron .",
     "rebuild-sharp": "npm rebuild --runtime=electron --target=$(electron --version | sed 's/v//') --disturl=https://electronjs.org/headers --build-from-source sharp",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "pack": "electron-builder --win --dir"
   },
   "keywords": [
     "electron",
@@ -18,8 +19,39 @@
   ],
   "author": "Greg Honmong",
   "license": "ISC",
+  "build": {
+    "appId": "com.gregh.screenprompt",
+    "productName": "Screen Prompt",
+    "directories": {
+      "output": "dist_electron"
+    },
+    "files": [
+      "main.js",
+      "*.html",
+      "*.js",
+      "assets/sp-icon-large.png",
+      "assets/SP-logo_v01.jpg",
+      "!assets/e5e171a0_339b_482c_8b6c_c6b8216dace7-e5e171a0-339b-482c-8b6c-c6b8216dace7.jpg",
+      "!assets/ScreenPromptLogo.png",
+      "!assets/**/*.psd"
+    ],
+    "win": {
+      "icon": "assets/sp-icon-large.png"
+    },
+    "mac": {
+      "icon": "assets/sp-icon-large.png"
+    },
+    "linux": {
+      "icon": "assets/sp-icon-large.png"
+    },
+    "asarUnpack": [
+      "**/node_modules/sharp/**",
+      "**/node_modules/keytar/**"
+    ]
+  },
   "devDependencies": {
-    "electron": "^29.0.0"
+    "electron": "^29.0.0",
+    "electron-builder": "^26.0.12"
   },
   "dependencies": {
     "@google/generative-ai": "^0.11.3",

@@ -205,36 +205,44 @@ function initializeApp() {
     const hotkey = store.get('captureHotkey', defaultHotkey); // Get stored or default hotkey
      registerGlobalHotkey(hotkey, defaultHotkey);
 
+
     // --- System Tray Icon Setup (MODIFIED to add Settings) ---
-    const iconName = 'icon.png';
+    const iconName = 'sp-icon-large.png'; // Using your new large icon
     const iconPath = path.join(__dirname, 'assets', iconName);
 
-    if (!fs.existsSync(iconPath)) { /* ... error handling ... */ }
-    else {
-        let trayIconImage; // ... (your existing tray icon image loading logic) ...
+    if (!fs.existsSync(iconPath)) {
+        console.error(`Error: Tray icon not found at ${iconPath}. Tray will not be created.`);
+    } else { // This 'else' executes if the icon file DOES exist
+        let trayIconImage;
         try {
             trayIconImage = nativeImage.createFromPath(iconPath);
-            if (trayIconImage.isEmpty()) throw new Error('Loaded image is empty.');
-            if (process.platform === 'darwin') {
+            if (trayIconImage.isEmpty()) {
+                console.error(`Error: Loaded tray icon image from ${iconPath} is empty.`);
+                trayIconImage = null; // Ensure it's null if empty
+            } else if (process.platform === 'darwin') {
                 trayIconImage = trayIconImage.resize({ width: 16, height: 16 });
                 trayIconImage.setTemplateImage(true);
             }
-        } catch (e) { trayIconImage = null; }
-
+        } catch (e) {
+            console.error(`Error creating tray icon image from ${iconPath}:`, e);
+            trayIconImage = null;
+        }
 
         if (trayIconImage) {
             tray = new Tray(trayIconImage);
             const contextMenu = Menu.buildFromTemplate([
                 { label: 'Capture Screen Area', click: () => toggleCaptureWindow() },
-                { label: 'Settings...', click: createSettingsWindow }, // Added Settings
+                { label: 'Settings...', click: createSettingsWindow },
                 { type: 'separator' },
                 { label: 'Quit Screen Prompt', click: () => app.quit() }
             ]);
             tray.setToolTip('Screen Describer');
             tray.setContextMenu(contextMenu);
             console.log('System tray icon initialized with Settings option.');
-        } else { /* ... error handling ... */ }
-    }
+        } else {
+            console.error(`Error: Failed to load tray icon image from ${iconPath} or image was invalid. Tray not created.`);
+        }
+    } // Closes the 'else' for fs.existsSync
 }
 
 // --- New Helper function for registering hotkeys ---
