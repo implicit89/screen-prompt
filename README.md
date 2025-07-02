@@ -1,5 +1,7 @@
 # Screen Prompt
 
+![Screen Prompt Demo](assets/SP_in use-large.gif)
+
 A desktop application for macOS and Windows that allows users to select an area of their screen and receive an AI-generated description of its contents.
 
 ## Core Technologies
@@ -31,7 +33,7 @@ A desktop application for macOS and Windows that allows users to select an area 
     `npm run rebuild-sharp`.
 
 4.  **Configure AI Service Provider & API Keys:**
-    Configuration of your chosen AI Service Provider (OpenAI, Google Gemini, or a Local Server like Ollama) is primarily managed through the **in-app Settings page**. This is the recommended method, jump to the next section on running the application if you plan on doing this. The `.env` file method is secondary and can be used for initial fallback, especially for OpenAI and Gemini API keys.
+    Configuration of your chosen AI Service Provider (OpenAI, Google Gemini, or a Local Server like Ollama) is primarily managed through the **in-app Settings page**. This is the recommended method, jump to the next section on running the application first if you plan on doing this. The `.env` file method is secondary and can be used for initial fallback, especially for OpenAI and Gemini API keys.
 
     *   **Using the In-App Settings Page (Recommended):**
         Access the Settings page via the application menu (File > Settings or Screen Prompt > Settings on macOS) or by pressing `CmdOrCtrl+,`. This is the most comprehensive way to set up your AI provider.
