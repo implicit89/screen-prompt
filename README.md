@@ -1,6 +1,6 @@
 # Screen Prompt
 
-![Screen Prompt Demo](assets/SP_in use-large.gif)
+![Screen Prompt Demo](assets/SP_in-use-small.gif)
 
 A desktop application for macOS and Windows that allows users to select an area of their screen and receive an AI-generated description of its contents.
 
