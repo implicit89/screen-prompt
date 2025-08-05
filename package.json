@@ -45,6 +45,10 @@
     "linux": {
       "icon": "assets/sp-icon-large.png"
     },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
     "asarUnpack": [
       "**/node_modules/sharp/**",
       "**/node_modules/keytar/**"
