@@ -95,6 +95,21 @@
                     <label for="google-api-key">Google (Gemini) API Key:</label>
                     <input type="password" id="google-api-key" placeholder="AIzaSy...">
                 </div>
+                <div class="form-group">
+                    <label for="gemini-model">Gemini Model:</label>
+                    <select id="gemini-model">
+                        <option value="">-- Select a Model --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="gemini-max-tokens">Gemini Max Output Tokens:</label>
+                    <input type="number" id="gemini-max-tokens" placeholder="e.g., 450" value="450" min="1">
+                </div>
+                <div class="form-group">
+                    <label for="gemini-thinking-budget">Gemini Thinking Budget:</label>
+                    <input type="number" id="gemini-thinking-budget" placeholder="e.g., 1024" value="1024" min="-1" max="32768">
+                    <p class="description">Set a token budget for thinking. Use -1 for dynamic, 0 for off, or a specific number (e.g., 1024).</p>
+                </div>
                 <hr>
                 <div class="form-group">
                     <label for="local-server-url">Local Server URL (Ollama):</label>

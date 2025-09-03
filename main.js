@@ -460,11 +460,26 @@ After completing this internal analysis, you will follow the final instruction t
             });
             optimizedPrompt = response.choices[0]?.message?.content?.trim();
         } else if (selectedApiProvider === 'gemini' && genAI) {
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+            const geminiModel = store.get('geminiModel', 'gemini-1.5-flash-latest');
+            const geminiMaxTokens = parseInt(store.get('geminiMaxTokens', '450'), 10);
+            const thinkingBudget = parseInt(store.get('geminiThinkingBudget', '1024'), 10);
+            
+            console.log(`Using Gemini with model: ${geminiModel}, maxOutputTokens: ${geminiMaxTokens}, ThinkingBudget: ${thinkingBudget}`);
+
+            const model = genAI.getGenerativeModel({ model: geminiModel });
             const imagePart = { inlineData: { data: imageBase64, mimeType: "image/png" } };
+            
+            const generationConfig = {
+                maxOutputTokens: geminiMaxTokens,
+                temperature: 0.6,
+                thinkingConfig: {
+                    thinkingBudget: thinkingBudget
+                }
+            };
+
             const result = await model.generateContent({
                 contents: [{ role: "user", parts: [imagePart, { text: finalMetaPrompt }] }],
-                generationConfig: { maxOutputTokens: maxOutputTokens, temperature: 0.6 }
+                generationConfig: generationConfig
             });
             optimizedPrompt = result.response.text()?.trim();
         } else if (selectedApiProvider === 'local') {
@@ -595,6 +610,72 @@ ipcMain.handle('settings:set-hotkey', async (event, newHotkey) => {
 });
 
 // --- IPC Handlers for Settings (REVISED) ---
+ipcMain.handle('settings:get-gemini-models', async () => {
+    const apiKey = store.get('googleApiKey');
+    if (!apiKey) {
+        console.log('Cannot fetch Gemini models: API key is not set.');
+        return { success: false, models: [], error: 'API key is not set.' };
+    }
+
+    try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+        if (!response.ok) {
+            const errorData = await response.json();
+            const errorMessage = errorData.error?.message || `HTTP error! status: ${response.status}`;
+            console.error('Error fetching Gemini models:', errorMessage);
+            throw new Error(errorMessage);
+        }
+        const data = await response.json();
+        
+        // Filter for models that support 'generateContent' and are likely vision models
+        const supportedModels = data.models
+            .filter(model => 
+                model.supportedGenerationMethods.includes('generateContent') &&
+                model.name.includes('gemini') // Filter to keep only gemini models for now
+            )
+            .map(model => model.name.replace('models/', '')); // Extract the user-friendly model name
+
+        // Custom sort to prioritize newer and more capable models
+        supportedModels.sort((a, b) => {
+            // Helper to extract version number (e.g., from 'gemini-1.5-pro-latest' -> 1.5)
+            const getVersion = (name) => {
+                const match = name.match(/(\d+\.\d+)/);
+                return match ? parseFloat(match[1]) : 0;
+            };
+
+            const versionA = getVersion(a);
+            const versionB = getVersion(b);
+
+            // Sort by version number descending
+            if (versionA !== versionB) {
+                return versionB - versionA;
+            }
+
+            // If versions are the same, prioritize 'pro' models
+            const isProA = a.includes('pro');
+            const isProB = b.includes('pro');
+            if (isProA !== isProB) {
+                return isProA ? -1 : 1;
+            }
+
+            // If still the same, prioritize 'latest'
+            const isLatestA = a.includes('latest');
+            const isLatestB = b.includes('latest');
+            if (isLatestA !== isLatestB) {
+                return isLatestA ? -1 : 1;
+            }
+            
+            // Fallback to alphabetical sort if all else is equal
+            return a.localeCompare(b);
+        });
+
+        return { success: true, models: supportedModels };
+    } catch (error) {
+        console.error('Failed to fetch Gemini models:', error);
+        return { success: false, models: [], error: error.message };
+    }
+});
+
 ipcMain.handle('settings:get-settings', async () => {
     const defaultHotkey = process.platform === 'darwin' ? 'Cmd+F12' : 'Ctrl+F12';
     return {
@@ -604,6 +685,9 @@ ipcMain.handle('settings:get-settings', async () => {
         ollamaModelName: store.get('ollamaModelName', 'llava:7b'), // Added
         ollamaApiPath: store.get('ollamaApiPath', '/api/generate'), // Added
         ollamaCustomOptions: store.get('ollamaCustomOptions', ''), // Added
+        geminiModel: store.get('geminiModel', 'gemini-1.5-flash-latest'),
+        geminiMaxTokens: store.get('geminiMaxTokens', '450'),
+        geminiThinkingBudget: store.get('geminiThinkingBudget', '1024'), // Default budget
         apiProvider: store.get('apiProvider', 'openai'),
         hotkey: store.get('captureHotkey', defaultHotkey)
     };
@@ -618,6 +702,9 @@ ipcMain.handle('settings:save-settings', async (event, settings) => {
         if (typeof settings.ollamaModelName === 'string') store.set('ollamaModelName', settings.ollamaModelName.trim()); // Added
         if (typeof settings.ollamaApiPath === 'string') store.set('ollamaApiPath', settings.ollamaApiPath.trim()); // Added
         if (typeof settings.ollamaCustomOptions === 'string') store.set('ollamaCustomOptions', settings.ollamaCustomOptions.trim()); // Added
+        if (typeof settings.geminiModel === 'string') store.set('geminiModel', settings.geminiModel.trim());
+        if (typeof settings.geminiMaxTokens === 'string') store.set('geminiMaxTokens', settings.geminiMaxTokens.trim());
+        if (typeof settings.geminiThinkingBudget === 'string') store.set('geminiThinkingBudget', settings.geminiThinkingBudget.trim());
         if (['openai', 'gemini', 'local'].includes(settings.apiProvider)) store.set('apiProvider', settings.apiProvider);
         
         // Re-initialize API clients to apply changes immediately

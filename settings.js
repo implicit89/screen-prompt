@@ -38,6 +38,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const ollamaModelNameInput = document.getElementById('ollama-model-name'); // Added
     const ollamaApiPathInput = document.getElementById('ollama-api-path'); // Added
     const ollamaCustomOptionsInput = document.getElementById('ollama-custom-options'); // Added
+    const geminiModelSelect = document.getElementById('gemini-model'); // Added
+    const geminiMaxTokensInput = document.getElementById('gemini-max-tokens'); // Added
+    const geminiThinkingBudgetInput = document.getElementById('gemini-thinking-budget');
     const saveSettingsButton = document.getElementById('save-settings');
     const statusMessage = document.getElementById('status-message');
     const providerRadios = document.querySelectorAll('input[name="api-provider"]');
@@ -57,6 +60,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 ollamaModelNameInput.value = settings.ollamaModelName || 'llava:7b'; // Added, with default
                 ollamaApiPathInput.value = settings.ollamaApiPath || '/api/generate'; // Added, with default
                 ollamaCustomOptionsInput.value = settings.ollamaCustomOptions || ''; // Added, with default
+                geminiModelSelect.value = settings.geminiModel || 'gemini-1.5-flash-latest'; // Added, with default
+                geminiMaxTokensInput.value = settings.geminiMaxTokens || '450'; // Added, with default
+                
+                // Handle Thinking Mode settings
+                geminiThinkingBudgetInput.value = settings.geminiThinkingBudget || '1024';
+
                 const activeProvider = settings.apiProvider || 'openai';
                 const radioToCheck = document.getElementById(`provider-${activeProvider}`);
                 if (radioToCheck) radioToCheck.checked = true;
@@ -86,6 +95,9 @@ document.addEventListener('DOMContentLoaded', () => {
             ollamaModelName: ollamaModelNameInput.value.trim(), // Added
             ollamaApiPath: ollamaApiPathInput.value.trim(), // Added
             ollamaCustomOptions: ollamaCustomOptionsInput.value.trim(), // Added
+            geminiModel: geminiModelSelect.value, // Added
+            geminiMaxTokens: geminiMaxTokensInput.value.trim(), // Added
+            geminiThinkingBudget: geminiThinkingBudgetInput.value.trim(),
             apiProvider: selectedProvider,
             hotkey: newHotkeyString || hotkeyInput.value
         };
@@ -136,7 +148,37 @@ document.addEventListener('DOMContentLoaded', () => {
         loadSettings();
     });
 
+    // --- New function to dynamically populate Gemini models ---
+    async function populateGeminiModels() {
+        const selectElement = document.getElementById('gemini-model');
+        const savedSettings = await window.settingsAPI.getSettings(); // Get settings to know which one to pre-select
+        
+        selectElement.innerHTML = '<option value="">-- Fetching models... --</option>'; // Clear existing options and set loading message
+
+        const result = await window.settingsAPI.getGeminiModels();
+
+        if (result.success && result.models.length > 0) {
+            selectElement.innerHTML = ''; // Clear loading message
+            result.models.forEach(modelName => {
+                const option = document.createElement('option');
+                option.value = modelName;
+                // Make the model name more readable, e.g., "gemini-1.5-flash-latest" -> "Gemini 1.5 Flash (Latest)"
+                option.textContent = modelName.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                selectElement.appendChild(option);
+            });
+        } else {
+            // Handle error or no models found
+            selectElement.innerHTML = `<option value="">-- ${result.error || 'No models found'} --</option>`;
+        }
+
+        // After populating, set the selected value based on saved settings
+        if (savedSettings && savedSettings.geminiModel) {
+            selectElement.value = savedSettings.geminiModel;
+        }
+    }
+
     // --- Initial Actions on Load ---
     openTab('Model'); // Open the first tab by default
-    loadSettings(); // Load settings from main process
+    loadSettings(); // Load all saved settings (including which Gemini model was saved)
+    populateGeminiModels(); // Fetch and populate the Gemini models dropdown
 });
