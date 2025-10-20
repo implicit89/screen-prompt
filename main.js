@@ -832,6 +832,14 @@ async function getApiKey(service, account) {
 storeApiKey('ScreenPrompt', 'openai', 'your_openai_api_key_here');
 getApiKey('ScreenPrompt', 'openai').then(key => console.log(key));
 
+// Prevent app from quitting when all windows are closed (system tray app behavior)
+app.on('window-all-closed', () => {
+    // On macOS, apps typically stay open until explicitly quit (Cmd+Q)
+    // On Windows/Linux, we also want to keep running in the system tray
+    // So we do nothing here - the app stays alive
+    console.log('All windows closed, but app remains running in system tray.');
+});
+
 // Handle application quit
 app.on('before-quit', (event) => {
     // Close all windows
